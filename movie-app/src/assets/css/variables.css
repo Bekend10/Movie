@@ -1,0 +1,73 @@
+/* Design Tokens & CSS Variables */
+
+:root {
+  /* ==================== Backgrounds ==================== */
+  --bg-primary: #0d0d0d; /* Nền chính (gần đen) */
+  --bg-secondary: #1a1a2e; /* Nền phụ (navy tối) */
+  --bg-card: #16213e; /* Nền card (xanh tối) */
+  --bg-elevated: #1f2937; /* Nền nổi (dropdown, modal) */
+  --bg-overlay: rgba(0, 0, 0, 0.7); /* Overlay */
+
+  /* ==================== Accent Colors ==================== */
+  --accent-primary: #e50914; /* Đỏ Netflix */
+  --accent-hover: #f40612; /* Đỏ hover */
+  --accent-secondary: #b20710; /* Đỏ tối */
+  --accent-gold: #ffbe0b; /* Vàng (rating) */
+  --accent-green: #46d369; /* Xanh lá (badge "Mới") */
+
+  /* ==================== Text Colors ==================== */
+  --text-primary: #ffffff;
+  --text-secondary: #b3b3b3;
+  --text-muted: #6b7280;
+  --text-link: #e50914;
+
+  /* ==================== Spacing ==================== */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+
+  /* ==================== Border Radius ==================== */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 50%;
+
+  /* ==================== Shadows ==================== */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.7);
+  --shadow-glow: 0 0 20px rgba(229, 9, 20, 0.3);
+
+  /* ==================== Transitions ==================== */
+  --transition-fast: all 0.15s ease;
+  --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ==================== Typography ==================== */
+  --font-family: "Inter", "Segoe UI", -apple-system, sans-serif;
+  --font-size-xs: 0.75rem; /* 12px */
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-base: 1rem; /* 16px */
+  --font-size-lg: 1.125rem; /* 18px */
+  --font-size-xl: 1.5rem; /* 24px */
+  --font-size-2xl: 2rem; /* 32px */
+  --font-size-3xl: 3rem; /* 48px */
+  --font-size-hero: 4rem; /* 64px */
+
+  /* ==================== Z-Index ==================== */
+  --z-dropdown: 100;
+  --z-header: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+  --z-tooltip: 500;
+
+  /* ==================== Responsive Breakpoints ==================== */
+  --breakpoint-mobile: 640px;
+  --breakpoint-tablet: 1024px;
+  --breakpoint-desktop: 1440px;
+}
