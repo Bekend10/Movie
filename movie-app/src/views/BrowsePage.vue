@@ -16,11 +16,13 @@ const router = useRouter()
 const loading = ref(true)
 const movies = ref([])
 const genres = ref([])
+const countries = ref([])
 const genreMovies = ref({}) // { genreSlug: { name: '', items: [] } }
 const currentPage = ref(1)
 const totalPages = ref(1)
 const viewMode = ref('grid') // 'grid' or 'list'
 const selectedGenre = ref('all')
+const selectedCountry = ref('all')
 
 // Get page type from query param
 const pageType = computed(() => route.query.type || 'movies')
@@ -40,11 +42,47 @@ const pageSubtitle = computed(() => {
   return 'Cập nhật phim mới nhất mỗi ngày'
 })
 
+// Load countries list
+const loadCountries = async () => {
+  try {
+    const response = await movieService.getCountries()
+    if (response.status === 'success' && response.data) {
+      const countriesList = response.data.items || response.data
+      countries.value = Array.isArray(countriesList) ? countriesList : []
+    }
+  } catch (err) {
+    console.error('Error loading countries:', err)
+    countries.value = []
+  }
+}
+
 // Load movies for "phim-moi" mode
 const loadNewMovies = async (page = 1) => {
   loading.value = true
   
   try {
+    // If a country is selected, use country endpoint
+    if (selectedCountry.value !== 'all') {
+      const response = await movieService.getMoviesByCountry(selectedCountry.value, {
+        page,
+        limit: 24,
+        sort_field: 'modified.time',
+        sort_type: 'desc'
+      })
+      
+      if (response.status === 'success' && response.data) {
+        movies.value = response.data.items || []
+        
+        const pagination = response.data.params?.pagination
+        if (pagination) {
+          currentPage.value = pagination.currentPage || 1
+          totalPages.value = Math.ceil((pagination.totalItems || 0) / (pagination.totalItemsPerPage || 24))
+        }
+      }
+      return
+    }
+    
+    // Otherwise load new movies normally
     const response = await movieService.getMoviesList('phim-moi', {
       page,
       limit: 24,
@@ -178,6 +216,16 @@ const handleGenreChange = (genreSlug) => {
   }
 }
 
+// Handle country filter change
+const handleCountryChange = (countrySlug) => {
+  selectedCountry.value = countrySlug
+  currentPage.value = 1
+  
+  if (!isSeriesMode.value) {
+    loadNewMovies(1)
+  }
+}
+
 // Pagination
 const goToPage = (page) => {
   if (page < 1 || page > totalPages.value) return
@@ -224,6 +272,7 @@ watch(() => route.path, () => {
 
 onMounted(() => {
   console.log('BrowsePage mounted, initial type:', route.query.type)
+  loadCountries()
   loadData()
 })
 </script>
@@ -242,24 +291,46 @@ onMounted(() => {
             <p class="page-subtitle">{{ pageSubtitle }}</p>
           </div>
           
-          <!-- Genre Filter (for series mode with selected genre) -->
-          <div v-if="isSeriesMode && genres.length > 0" class="genre-filter">
-            <label for="genre-select">Thể loại:</label>
-            <select
-              id="genre-select"
-              v-model="selectedGenre"
-              @change="handleGenreChange(selectedGenre)"
-              class="genre-select"
-            >
-              <option value="all">Tất cả thể loại</option>
-              <option
-                v-for="genre in genres"
-                :key="genre.slug"
-                :value="genre.slug"
+          <div class="filters-container">
+            <!-- Genre Filter (for series mode with selected genre) -->
+            <div v-if="isSeriesMode && genres.length > 0" class="filter-group">
+              <label for="genre-select">Thể loại:</label>
+              <select
+                id="genre-select"
+                v-model="selectedGenre"
+                @change="handleGenreChange(selectedGenre)"
+                class="filter-select"
               >
-                {{ genre.name }}
-              </option>
-            </select>
+                <option value="all">Tất cả thể loại</option>
+                <option
+                  v-for="genre in genres"
+                  :key="genre.slug"
+                  :value="genre.slug"
+                >
+                  {{ genre.name }}
+                </option>
+              </select>
+            </div>
+            
+            <!-- Country Filter (for movie mode) -->
+            <div v-if="!isSeriesMode && countries.length > 0" class="filter-group">
+              <label for="country-select">Quốc gia:</label>
+              <select
+                id="country-select"
+                v-model="selectedCountry"
+                @change="handleCountryChange(selectedCountry)"
+                class="filter-select"
+              >
+                <option value="all">Tất cả quốc gia</option>
+                <option
+                  v-for="country in countries"
+                  :key="country.slug"
+                  :value="country.slug"
+                >
+                  {{ country.name }}
+                </option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -384,8 +455,14 @@ onMounted(() => {
   font-size: var(--font-size-lg);
 }
 
-/* Genre Filter */
-.genre-filter {
+/* Filters Container */
+.filters-container {
+  display: flex;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.filter-group {
   display: flex;
   align-items: center;
   gap: var(--space-lg);
@@ -397,7 +474,7 @@ onMounted(() => {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
-.genre-filter label {
+.filter-group label {
   color: var(--text-secondary);
   font-weight: 600;
   font-size: var(--font-size-base);
@@ -407,7 +484,7 @@ onMounted(() => {
   font-size: var(--font-size-sm);
 }
 
-.genre-select {
+.filter-select {
   min-width: 260px;
   padding: var(--space-md) var(--space-lg);
   padding-right: 48px;
@@ -427,21 +504,21 @@ onMounted(() => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.genre-select:hover {
+.filter-select:hover {
   border-color: var(--accent-primary);
   background: linear-gradient(135deg, rgba(50, 50, 70, 0.95), rgba(40, 40, 60, 0.95));
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(229, 9, 20, 0.25), 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
-.genre-select:focus {
+.filter-select:focus {
   outline: none;
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 4px rgba(229, 9, 20, 0.2), 0 8px 24px rgba(229, 9, 20, 0.3);
   transform: translateY(-2px);
 }
 
-.genre-select option {
+.filter-select option {
   background: #1a1a2e;
   color: var(--text-primary);
   padding: 12px 16px;
@@ -450,34 +527,34 @@ onMounted(() => {
   transition: all 0.2s;
 }
 
-.genre-select option:hover {
+.filter-select option:hover {
   background: linear-gradient(90deg, rgba(229, 9, 20, 0.2), rgba(229, 9, 20, 0.1));
   color: var(--accent-primary);
 }
 
-.genre-select option:checked {
+.filter-select option:checked {
   background: linear-gradient(90deg, var(--accent-primary), rgba(229, 9, 20, 0.8));
   color: white;
   font-weight: 700;
 }
 
 /* Custom Scrollbar for Dropdown (Webkit browsers) */
-.genre-select::-webkit-scrollbar {
+.filter-select::-webkit-scrollbar {
   width: 8px;
 }
 
-.genre-select::-webkit-scrollbar-track {
+.filter-select::-webkit-scrollbar-track {
   background: rgba(20, 20, 30, 0.5);
   border-radius: 4px;
 }
 
-.genre-select::-webkit-scrollbar-thumb {
+.filter-select::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, var(--accent-primary), rgba(229, 9, 20, 0.6));
   border-radius: 4px;
   transition: all 0.3s;
 }
 
-.genre-select::-webkit-scrollbar-thumb:hover {
+.filter-select::-webkit-scrollbar-thumb:hover {
   background: var(--accent-primary);
 }
 
