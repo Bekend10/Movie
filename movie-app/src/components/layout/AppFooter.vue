@@ -71,7 +71,7 @@ import { Github, Mail, Facebook, Instagram, Twitter } from 'lucide-vue-next'
             &copy; {{ new Date().getFullYear() }} NetFlex. All rights reserved.
           </p>
           <p class="made-with">
-            Made with ❤️ by NetFlex Team
+            Made with ❤️ by Bekend
           </p>
         </div>
       </div>

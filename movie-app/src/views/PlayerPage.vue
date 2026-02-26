@@ -180,7 +180,7 @@ const showControlsTemporarily = () => {
     if (isPlaying.value) {
       showControls.value = false
     }
-  }, 3000)
+  }, 10000)
 }
 
 const handleMouseMove = () => {
