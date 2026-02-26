@@ -155,6 +155,24 @@ const isInWatchlist = computed(() => {
   return watchlistStore.isInWatchlist(movie.value._id || movie.value.slug)
 })
 
+const hasEpisodes = computed(() => {
+  // Check if movie has any episodes to watch
+  if (!episodes.value || episodes.value.length === 0) return false
+  
+  // Check if any server has episodes
+  const hasValidEpisodes = episodes.value.some(server => 
+    server.server_data && server.server_data.length > 0
+  )
+  
+  return hasValidEpisodes
+})
+
+const isTrailerOnly = computed(() => {
+  // Check if episode_current indicates trailer only
+  if (movie.value?.episode_current?.toLowerCase().includes('trailer')) return true
+  return !hasEpisodes.value
+})
+
 const toggleWatchlist = () => {
   // Check if user is logged in
   if (!authStore.isLoggedIn) {
@@ -257,9 +275,9 @@ onMounted(() => {
               
               <!-- Actions -->
               <div class="action-buttons">
-                <button @click="playMovie" class="btn btn-play">
+                <button @click="playMovie" class="btn btn-play" :disabled="isTrailerOnly" :title="isTrailerOnly ? 'Phim chưa có tập để xem' : ''">
                   <Play :size="20" />
-                  {{ selectedEpisode ? `Xem Tập ${selectedEpisode.name}` : 'Xem phim' }}
+                  {{ isTrailerOnly ? 'Chỉ có Trailer' : (selectedEpisode ? `Xem Tập ${selectedEpisode.name}` : 'Xem phim') }}
                 </button>
                 <button @click="toggleWatchlist" :class="['btn', 'btn-secondary', { 'btn-watchlist-active': isInWatchlist }]">
                   <Heart :size="20" :fill="isInWatchlist ? 'currentColor' : 'none'" />
@@ -544,6 +562,17 @@ onMounted(() => {
 .btn-play:hover {
   background: var(--primary-dark);
   transform: translateY(-2px);
+}
+
+.btn-play:disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-play:disabled:hover {
+  transform: none;
 }
 
 .btn-secondary {

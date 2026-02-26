@@ -66,6 +66,13 @@ const currentMovieBackdrop = computed(() => {
   return getThumbUrl(currentMovie.value, movieStore.cdnDomain)
 })
 
+const isTrailerOnly = computed(() => {
+  // Check if current movie only has trailer
+  if (!currentMovie.value) return false
+  if (currentMovie.value?.episode_current?.toLowerCase().includes('trailer')) return true
+  return false
+})
+
 onMounted(() => {
   if (props.movies.length > 0) {
     startAutoRotate()
@@ -114,9 +121,9 @@ export default {
             </p>
 
             <div class="hero-actions">
-              <button class="btn btn-primary" @click="watchNow">
+              <button class="btn btn-primary" @click="watchNow" :disabled="isTrailerOnly" :title="isTrailerOnly ? 'Phim chưa có tập để xem' : ''">
                 <Play :size="20" />
-                Xem Ngay
+                {{ isTrailerOnly ? 'Chỉ có Trailer' : 'Xem Ngay' }}
               </button>
               <button class="btn btn-secondary" @click="moreInfo">
                 <Info :size="20" />
@@ -284,6 +291,18 @@ export default {
 .btn-primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(229, 9, 20, 0.4);
+}
+
+.btn-primary:disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-primary:disabled:hover {
+  transform: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .btn-secondary {

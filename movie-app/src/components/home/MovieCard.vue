@@ -29,6 +29,12 @@ const posterUrl = computed(() => {
   return getPosterUrl(props.movie, movieStore.cdnDomain)
 })
 
+const isTrailerOnly = computed(() => {
+  // Check if movie only has trailer
+  if (props.movie?.episode_current?.toLowerCase().includes('trailer')) return true
+  return false
+})
+
 const goToDetail = () => {
   router.push(`/movie/${movieSlug.value}`)
 }
@@ -119,7 +125,7 @@ const onImageLoad = () => {
 
           <!-- Actions -->
           <div class="overlay-actions">
-            <button class="action-btn play-btn" @click="playMovie" title="Xem phim">
+            <button class="action-btn play-btn" @click="playMovie" :title="isTrailerOnly ? 'Chỉ có trailer' : 'Xem phim'" :disabled="isTrailerOnly" :class="{ 'btn-disabled': isTrailerOnly }">
               <Play :size="18" />
             </button>
             <button class="action-btn" @click="toggleWatchlist" title="Thêm vào danh sách">
@@ -298,6 +304,20 @@ const onImageLoad = () => {
 
 .play-btn:hover {
   background-color: var(--accent-hover);
+}
+
+.play-btn:disabled,
+.btn-disabled {
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.play-btn:disabled:hover,
+.btn-disabled:hover {
+  background-color: var(--bg-tertiary);
+  transform: scale(1);
 }
 
 /* Responsive */
