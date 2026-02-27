@@ -116,10 +116,6 @@ export default {
               <span class="duration">{{ currentMovie.time || currentMovie.duration || '2h 15m' }}</span>
             </div>
 
-            <p class="hero-description">
-              {{ currentMovie.description || 'Mô tả phim sẽ được hiển thị tại đây...' }}
-            </p>
-
             <div class="hero-actions">
               <button class="btn btn-primary" @click="watchNow" :disabled="isTrailerOnly" :title="isTrailerOnly ? 'Phim chưa có tập để xem' : ''">
                 <Play :size="20" />
