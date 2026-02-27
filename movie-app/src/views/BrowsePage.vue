@@ -209,6 +209,15 @@ const handleGenreChange = (genreSlug) => {
   selectedGenre.value = genreSlug
   currentPage.value = 1
   
+  // Update URL with genre filter
+  const query = { ...route.query }
+  if (genreSlug === 'all') {
+    delete query.genre
+  } else {
+    query.genre = genreSlug
+  }
+  router.replace({ query })
+  
   if (genreSlug === 'all') {
     loadSeriesByGenres()
   } else {
@@ -220,6 +229,15 @@ const handleGenreChange = (genreSlug) => {
 const handleCountryChange = (countrySlug) => {
   selectedCountry.value = countrySlug
   currentPage.value = 1
+  
+  // Update URL with country filter
+  const query = { ...route.query }
+  if (countrySlug === 'all') {
+    delete query.country
+  } else {
+    query.country = countrySlug
+  }
+  router.replace({ query })
   
   if (!isSeriesMode.value) {
     loadNewMovies(1)
@@ -245,28 +263,63 @@ const goToPage = (page) => {
 const loadData = () => {
   console.log('Loading data, pageType:', pageType.value, 'isSeriesMode:', isSeriesMode.value)
   
+  // Restore filters from URL query params
+  if (route.query.genre) {
+    selectedGenre.value = route.query.genre
+  }
+  if (route.query.country) {
+    selectedCountry.value = route.query.country
+  }
+  
   if (isSeriesMode.value) {
-    loadSeriesByGenres()
+    // If a specific genre is selected, load that genre's movies
+    if (selectedGenre.value !== 'all') {
+      loadGenreMovies(selectedGenre.value, 1)
+    } else {
+      loadSeriesByGenres()
+    }
   } else {
     loadNewMovies(1)
   }
 }
 
 // Watch for route changes
-watch(() => route.query.type, (newType) => {
-  console.log('Route query changed, type:', newType)
-  selectedGenre.value = 'all'
-  currentPage.value = 1
-  genreMovies.value = {}
-  movies.value = []
-  loadData()
+watch(() => route.query.type, (newType, oldType) => {
+  // Only reset filters if switching between modes (movies <-> series)
+  if (newType !== oldType) {
+    console.log('Route query changed, type:', newType)
+    selectedGenre.value = 'all'
+    selectedCountry.value = 'all'
+    currentPage.value = 1
+    genreMovies.value = {}
+    movies.value = []
+    loadData()
+  }
 }, { immediate: false })
 
-watch(() => route.path, () => {
-  // Reset when navigating away and back
-  if (route.path === '/browse') {
-    selectedGenre.value = 'all'
+// Watch for genre/country changes in URL (back/forward navigation)
+watch(() => [route.query.genre, route.query.country], ([newGenre, newCountry]) => {
+  let needsReload = false
+  
+  if (newGenre !== undefined && newGenre !== selectedGenre.value) {
+    selectedGenre.value = newGenre || 'all'
+    needsReload = true
+  }
+  
+  if (newCountry !== undefined && newCountry !== selectedCountry.value) {
+    selectedCountry.value = newCountry || 'all'
+    needsReload = true
+  }
+  
+  if (needsReload && route.path === '/browse') {
     currentPage.value = 1
+    if (isSeriesMode.value && selectedGenre.value !== 'all') {
+      loadGenreMovies(selectedGenre.value, 1)
+    } else if (isSeriesMode.value) {
+      loadSeriesByGenres()
+    } else {
+      loadNewMovies(1)
+    }
   }
 })
 

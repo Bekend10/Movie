@@ -19,6 +19,7 @@ const currentPage = ref(1)
 const totalPages = ref(1)
 const totalResults = ref(0)
 const showFilters = ref(false)
+const searchTimeout = ref(null)
 
 // Popular searches (có thể lấy từ localStorage hoặc backend)
 const popularSearches = ref([
@@ -120,8 +121,13 @@ const searchMovies = async (page = 1) => {
 // Handle search submit
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
+    // Clear any pending debounced search
+    if (searchTimeout.value) {
+      clearTimeout(searchTimeout.value)
+    }
     currentPage.value = 1
     router.push({ query: { q: searchQuery.value.trim() } })
+    searchMovies(1)
   }
 }
 
@@ -146,12 +152,39 @@ const goToPage = (page) => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
+// Watch search query for real-time search with debounce
+watch(searchQuery, (newQuery) => {
+  // Clear previous timeout
+  if (searchTimeout.value) {
+    clearTimeout(searchTimeout.value)
+  }
+  
+  // If query is empty, clear results
+  if (!newQuery || !newQuery.trim()) {
+    searchResults.value = []
+    totalResults.value = 0
+    return
+  }
+  
+  // Set new timeout for debounced search (500ms after user stops typing)
+  searchTimeout.value = setTimeout(() => {
+    currentPage.value = 1
+    // Update URL without triggering the route watcher
+    router.replace({ query: { q: newQuery.trim() } })
+    searchMovies(1)
+  }, 500)
+})
+
 // Watch route query changes
 watch(() => route.query.q, (newQuery) => {
-  if (newQuery) {
+  if (newQuery && newQuery !== searchQuery.value) {
+    // Clear any pending search timeout
+    if (searchTimeout.value) {
+      clearTimeout(searchTimeout.value)
+    }
     searchQuery.value = newQuery
     searchMovies(1)
-  } else {
+  } else if (!newQuery && searchQuery.value) {
     searchQuery.value = ''
     searchResults.value = []
   }
