@@ -83,6 +83,17 @@ const hasPreviousEpisode = computed(() => {
   return currentEpisodeIndex.value > 0
 })
 
+// Total episodes count
+const totalEpisodesCount = computed(() => {
+  if (!episodes.value[selectedServer.value]) return 0
+  return episodes.value[selectedServer.value].server_data.length
+})
+
+// Check if should show episode info (more than 2 episodes)
+const shouldShowEpisodeInfo = computed(() => {
+  return totalEpisodesCount.value > 2
+})
+
 // Video Control Functions
 const togglePlay = () => {
   if (!videoRef.value) return
@@ -533,6 +544,18 @@ onBeforeUnmount(() => {
           Trình duyệt của bạn không hỗ trợ phát video.
         </video>
         
+        <!-- Movie Info Overlay (Top) -->
+        <Transition name="fade">
+          <div v-show="showControls || !isPlaying" class="movie-info-overlay">
+            <div class="movie-info-content">
+              <h2 class="movie-title">{{ movie?.name }}</h2>
+              <p v-if="currentEpisode && shouldShowEpisodeInfo" class="episode-info">
+                Tập {{ currentEpisode.name }} / {{ totalEpisodesCount }}
+              </p>
+            </div>
+          </div>
+        </Transition>
+
         <!-- Custom Controls Overlay -->
         <Transition name="fade">
           <div v-show="showControls || !isPlaying" class="video-controls-overlay">
@@ -804,6 +827,44 @@ onBeforeUnmount(() => {
   height: 100%;
   max-height: calc(100vh - 60px);
   object-fit: contain;
+}
+
+/* Movie Info Overlay */
+.movie-info-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: var(--space-xl) var(--space-xl);
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.6) 50%,
+    transparent 100%
+  );
+  z-index: 11;
+  pointer-events: none;
+}
+
+.movie-info-content {
+  text-align: left;
+}
+
+.movie-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-sm) 0;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+  line-height: 1.3;
+}
+
+.episode-info {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin: 0;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
 }
 
 /* Custom Video Controls */
@@ -1229,6 +1290,18 @@ onBeforeUnmount(() => {
   
   .player-info h1 {
     font-size: 1rem;
+  }
+  
+  .movie-info-overlay {
+    padding: var(--space-lg) var(--space-md);
+  }
+  
+  .movie-title {
+    font-size: 1.25rem;
+  }
+  
+  .episode-info {
+    font-size: 0.95rem;
   }
   
   .controls-bar {
